@@ -39,7 +39,159 @@
         }
 
 
+        /*SCREENS*/
+        .screen {display: none; height: 100%; width: 100%; position: absolute; inset: 0;}
+        .screen.active { display: flex; flex-direction: column;}
         
+
+        /* LANDING / SELECT */
+        #screen-select {
+            background: radial-gradient(ellipse at 30% 20%, #1a2744 0%, var(--bg) 60%);
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .select-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .select-header h1 {
+            font-size: clamp(2rem, 5ww, 2.3rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #00d4ff, #7c3aed 60%, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .select-header p {
+            color: var(--muted);
+            font-size: 1.05rem;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .vehicle-grid { 
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18x;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .vehicle-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px 18px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vehicle-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(0,212,255,0.08));
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+
+        .vehicle-card:hover {
+            border-color: var(--accent);
+            transform: translate(-4px);
+            box-shadow: 0 12px 40px rgba(0, 212, 255, 0.15);
+        }
+
+        .vehicle-card:hover::before {opacity: 1;}
+        .vehicle-card .icon {
+            width: 88px;
+            height: 88px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vehicle-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .vehicle-card p {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .vehicle-card .tag {
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: rgba(0,212,255,0.12);
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.03em;
+        }
+
+
+        /* MAIN APP*/
+        #screen-app {
+            background: var(--bg);
+        }
+
+
+        .topbar {
+            height: 52px;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 16px;
+            flex-shrink: 0;
+            z-index: 50;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.15rem;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+            white-space: nowrap;
+        }
+
+        .vehicle-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg3);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+        }
+
+        .vehicle-badge svg {width: 18px; height: 18px;}
+        .status-pills {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 </html>
