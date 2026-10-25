@@ -756,7 +756,345 @@
         </header>
 
 
+        <!--Main 3-column layout-->
+        <div class = "main-layout">
+            <!--LEFT SIDEBAR-->
+            <aside class = "sidebar-left">
+                <div class = "panel">
+                    <div class = "panel-title">Flight Telemetry</div>
+                    <div classs = "telem-grid" id = "telem-grid">
+                        <div class = "telem-item">
+                            <div class = "label">Altitude</div>
+                            <div class = "value"><span id = "t-alt">0.0</span><span class = "unit">m</span></div>
+                        </div>
+
+                        <div class = "telem-item">
+                            <div class = "label">Climb</div>
+                            <div class= "value"><span id = "t-vs">0.0</span><span class = "unit"> m/s </span></div>
+                        </div>
+
+                        <div class = "telem-item">
+                            <div class = "label">Ground Spd</div>
+                            <div class = "value"><span id = "t-gs">0/0</span><span class = "unit">m/s</span></div>
+                        </div>
+
+                        <div class = "telem-item">
+                            <div class = "label">Airspeed</div>
+                            <div class = "value"><span id = "t-as">0.0</span><span class = "unit">m/s</span></div>
+                        </div>                         
+
+                        <div class = "telem-item">
+                            <div class = "label">Heading</div>
+                            <div class = "value"><span id = "t-hdg">0</span><span class = "unit">deg</span></div>
+                        </div>
+
+                        <div class = "telem-item">
+                            <div class = "label"> Yaw Rate</div>
+                            <div class = "value"><span id = "t-yawrate">0.0</span><span class = "unit">deg/s</span></div>
+                        </div>
+
+                        <div class = "telem-item">
+                            <div class = "label"> Roll</div>
+                            <div class = "value"><span id = "t-roll">0.0</span><span class = "unit">deg</span></div>
+                        </div>
+
+                        <div class = "telem-item">
+                            <div class = "label"> Pitch</div>
+                            <div class = "value"><span id = "t-pitch">0.0</span><span class = "unit">deg</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class = "panel">
+                    <div class = "panel-title"> Power & Link</div>
+                    <div class = "telem-grid">
+                        <div class = "telem-item wide">
+                            <div class = "label"> Battery <span id = "t-batt-pct">100</span>%</div>
+                            <div class = "value"><span id = "t-volt">16.8</span><span class = "unit">V</span> . <span id = "t-amp"> 0.0</span><span class = "unit">A</span></div>
+                            <div class = "battery-bar"><div class = "battery-fill" id = "batt-fill" style = "width:100%; background: #22c55e;"></div>
+                        </div>
+
+                        <div class = "telem-item">
+                            <div class = "label">RSSI</div>
+                            <div class = "value"><span id = "t-rssi">-45</span><span class = "unit">dBm</span></div>
+                        </div>
+
+                        <div class = "telem-item">
+                            <div class = "label"> Stats </div>
+                            <div class = "value"><span id = "t-stats">12</span></div>
+                        </div>
+
+                        <div class = "telem-item">
+                            <div class = "label">HDDP</div>
+                            <div class = "value"><span id = "t-hdop">0.8</span></div>
+                        </div> 
+
+                        <div class = "tele-item">
+                            <div class = "label">Home Dist</div>
+                            <div class = "value"><span id = "t-home">0</span><span class = "unit">m</span></div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class = "panel" style  = "flex:1; display: flex; flex-direction: column; min-height: 0;">
+                    <div class =  "panel-title">System Log</div>
+                    <div id = "log-console"></div>
+                </div>
+            </aside>
+
+
+            <!--Center-->
+            <main class = "center-area">
+                <div class = "view-tabs">
+                    <div class = "view-tab active" data-view="instruments">Instruments</div>
+                    <div class = "view-tab" data-view="map">Navigation Map</div>
+                    <div class = "view-tab" data-view="vehicle">Vehicle Diagram</div>
+                    <div class = "view-tab" data-view = "graphs">telemetry Graphs</div>
+                    <div class = "view-tab" data-view = "mission">Mission / WayPoitns</div>
+                </div>
+
+                <div class = "view-content">
+                    <!--Intr4ument-->
+                    <div class = "view-pane active" id = "view-instruments">
+                        <div class = "instruments-row">
+                            <div class = "instrument">
+                                <canvas id = "ai-canvas" width="220" height = "220"></canvas>
+                                <div class = "instrument-label">Attitude</div>
+                            </div>
+
+                            <div  class = "instrument">
+                                <canvas id = "alt-canvas" width="180" height="220"></canvas>
+                                <div class = "instrument-label">Altitude</div>
+                            </div>
+
+                            <div class ="instruemnt">
+                                <canvas id="hdg-canvas" width="180" height="180"></canvas>
+                                <div class = "instrument-label">Heading</div>
+                            </div>
+
+                            <div class = "instrument">
+                                <canvas id = "asi-canvas" width = "180" height ="180"></canvas>
+                                <div class = "instrument-label"> AirSpeed</div>
+                            </div>
+
+                            <div class = "instrument">
+                                <canvas id = "vsi-canvas" width = "140" height = "180"></canvas>
+                                <div class = "instrument-label">VSI</div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!--MAP-->
+                    <div class = "view-pane" id ="view-map">
+                        <canvas id ="map-canvas"></canvas>
+                        <div class ="map-overlay">
+                            <div>Lat: <span class = "coord" id = "map-lat">27.7172</div>
+                            <div>Lon: <span class = "coord" id = "map-lon">85.3240</span></div>
+                            <div style = "margin-top:4px;"> Track:  <span id = "map-track"> 0</span></div>
+                        </div>
+                    </div>
+
+
+                    <!--Vehicle Diagram-->
+                    <div class ="view-pane" id = "view-vehicle">
+                        <div id = "vehicle-view">
+                            <div class = "vehicle-diagram" id = "vehicle-svg-container"></div>
+                            <div class = "attitude-readouts">
+                                <div class = "label">Roll</div>
+                                <div class = "value" id = "vd-roll">0.0</div>
+                            </div>
+
+                            <div class = "attitude-readout">
+                                <div class = "label">Pitch</div>
+                                <div class = "value" id = "vd-pitch">0.0"</div>
+                            </div>
+
+                            <div class = "attitude-readout">
+                                <div class= "label">Yaw</div>
+                                <div class = "value" id = "vd-yaw">0.0deg</div>
+                            </div>
+
+                            <div class = "attitude-readout">
+                                <div class = "label">Throttle</div> 
+                                <div class = "value" id = "vd-thr">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!--  GRAPHS-->
+                  <div class = "view-pane" id = "view-graphs">
+                    <div class = "graph-container">
+                        <div class = "graph-card">
+                            <h4> Altitude(m)</h4>
+                            <canvas id ="graph-alt"></canvas>
+                        </div>
+
+                        <div class = "graph-card">
+                            <h4>Ground Speed (m/s)</h4>
+                            <canvas id ="graph-spd"></canvas>
+                        </div>
+
+                        <div class = "graph-card">
+                            <h4>Battery Voltage(V)</h4>
+                            <canvas id = "graph-volt"></canvas>
+                        </div>
+
+                        <div class = "graph-card">
+                            <h4>Attitude (Ro;ll /Pitch)</h4>
+                            <canvas id = "graph-att"></canvas>
+                        </div>
+                    </div>
+                  </div>
+
+
+                  <!--Mission-->
+                  <div class = "view-pane" id ="view-mission">
+                    <div style = "display:flex; flex-direction: column; gap:12px; height:100%;">
+                        <div style ="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class = "btn primary" id = "btn-add-wp">+ Add wayPoiint</button>
+                            <button class = "btn id" id = "btn-clear-wp">Clear ALl </button>
+                            <button class = "btn success" id = "btn-upload-mission">Upload Mission(5im)</button>   
+                        </div>
+
+                        <div style = "flex:1; overflow: auto; background:var(--panel); border: 1px solid vat(--border); border-radius:12px; padding: 12px;">
+                            <table style = "width:100%; border-collapse: collapse; font-size: 0.85rem;" id = "wp_table">
+                                <thead>
+                                    <tr style = "text-align:left; color:var(--muted); font-size:0.7rem; text-transform:uppercase;">
+                                        <th style = "padding:6px;">#</th>
+                                        <th>Command</th>
+                                        <th>Lat</th>
+                                        <th>Lon</th>
+                                        <th>ALt (m)</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id ="wp-tbody"></tbody>
+                            </table>
+                            <p id = "wp-empty" style = "color:var(--muted); text-align:center; padding: 30px;">No waypoints yet. Add sm to plan a mission</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!--HUD bottom strip-->
+            <div class = "hud-strip">
+                <div class = "hud-item">
+                    <div class = "h-label">ALT</div>
+                    <div class = "h-value" id = "hud-alt">0.0</div>
+                    <div class = "h-unit">m</div>
+            </div>
+
+            <div class = "hud-item">
+                <div class = "h-label">SPD</div>
+                <div class = "h-value" id="hud-spd">0.0</div>
+                <div class = "h-uint">m/s</div>
+            </div>
+
+            <div class = "hud-item">
+                <div class = "h-label">HDG</div>
+                <div class = "h-value" id = "hud-hdg">000</div>
+                <div class = "h-unit">def</div>
+            </div>
+
+            <div class = "hud-item">
+                <div class = "h-label">VS</div>
+                <div class = "h-value" id = "hud-vs">0.0</div>
+                <div class = "h-unit">m/s</div>
+            </div>
+
+            <div class = "hud-item">
+                <div class = "h-label">BATT</div>
+                <div class = "h-value" id = "hud-batt">100%</div>
+            </div>
+
+            <div class = "hud-item">
+                <div class = "h-label"> MODE</div>
+                <div class = "h-value" id = "hud-mode" style = "font-size:0.85rem;">STAB</div>
+            </div>
+
+            <div class = "hud-item">
+                <div class = "h-label">THR</div>
+                <div class = "h-value" id ="hud-thr">0%</div>
+            </div>
+        </div>
+    </main>
+
+    
+    
+    <!--Right sidebar-->
+    <aside class = "sidebar-right">
+        <duv ckass = "panel">
+            <div class = "panel-title"> Flight Controls</div>
+            <div class = "control-grid">
+
+                <button class = "btn auccess" id =" btn- arm">ARM</button>
+                <button class = "btn danger" id = "btn-disarm"> DISARM</button>
+                <button class = "btn " id = "btn-takeoff"> TAKEOFF</button>
+                <button class = "btn" id = "btn-land"> LAND</button>
+                <button class = "btn" id = "btn-rtl"> RTL</button>
+                <button class = "btn" id = "btn-hold">HOLD</button>
+            </div>
+        </duv>
+
+        <div class = "panel">
+            <div class = "panel-title"> FLight Mode</div>
+            <select class = "mode-select" id = "mode-select">
+                <option value = "STABALIZER">Stabailize</option>
+                <option value = "ALTHOLD">Altitude Hold</option>
+                <option value = "LOIFER"> Loiter</option>
+                <option value = "AUTO"> Auto</option>
+                <option value = "GUIDED">Guided</option>
+                <option value = "RTL"> Return to Launch</option>
+                <option value = "LAND"> Land</option>
+                <option value = "ACRO"> Acro</option>
+                <option value = "POSHOLD"> POsition Hold</option>
+            </select>
+        </div>
+
+
+        <div class = "panel">
+            <div class = "panel-title">Simulatio</div>
+            <div class = "sim-controls">
+                <button class = "btn primary" id = "btn-sim-fly"> Start Flight Sim</button>
+                <button class = "btn" id = "btn-sim-pause">PAUSE</button>
+                <button class = "btn" id = "btn-sim-reset"> RESET</button>
+                <label style="font-size:0.75rem; color:var(--muted); display:flex; align-items: center; gap:8px; margin-top:4px;">
+                    WIND / TURBLANCE
+                    <input type = "range" id = "sim-turb" min = "0" max = "100" value = "25" style=""flex:1;/>
+                </label>
+            </div>
+        </div>
+
+
+        <div class = "panel">
+            <div class = "panel-title">Quick Actions</div>
+            <div class = "control-grid">
+                <button class = "btn" id = "btn-center-map">Center Map</button>
+                <button class = "btn" id = "btn-clear-log"> Clear Log</button>
+                <button class = "btn" id = "btn-export-log"> Export Log</button>
+                <button class = "btn" id = "btn-screenshot"> SCreenshot</button>
+            </div>
+        </div>
+
         
-    </div>
+        <div class = "panel" style="flex:1;">
+            <div c;ass = "panel-title">Vehicle Info</div>
+            <div style = "font-size:0.8rem;; line-height:1.6; color:var(--muted);" id="vehice-info">-</div>>
+        </div>
+
+        <div class = "footer-note">
+            AetherLink GCS + Simulated MAVLink + offline Capabilities
+        </div>
+    </aside>
+</div>
+</div>
+
+
+
     </body>
 </html>
