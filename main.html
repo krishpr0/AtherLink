@@ -265,6 +265,61 @@
 
 
         /*layout*/
+        .main-layout {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 288px 1fr 300px;
+            grid-template-rows: 1fr;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        @media (max-width: 1200px) {
+            .main-layout {grid-template-columns: 240px 1fr 260px;}
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+            
+            .sidebar-left, .sidebar-right {
+                background: var(--bg2);
+                border-right: 1px solid var(--border);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+
+            .sidebar-right { border-right: none; border-left: 1px solid var(--border); }
+
+            .panel {
+                padding: 14px;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .panel:last-child {border-bottom: none;}
+            .panel-title { 
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: var(--muted);
+                margin-bottom: 10px;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+
+            /* Telemetry Numbers*/
+            .telem-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+        }
     </style>
 </head>
 </html>
