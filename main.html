@@ -709,8 +709,54 @@
                 .instruments-row { gap: 8px;}
                 .instrument canvas {width: 140px !important; height: 140px !important;}
             }
-
         }
     </style>
 </head>
+
+<body>
+    <!---Spash-->
+    <div class = "splash-loader" id="splash">
+        <div class = "spinner"></div>
+        <p style = "margin-top: 16px; color:var(--muted); font-size: 0.9rem;"> Initializing AetherLink CGS</p>
+    </div>
+
+
+    <!----SELECT SCREEN --->
+    <div class = "screen active" id = "screen-select">
+        <div class = "select-header">
+            <h1>AetherLink</h1>
+            <p>Prof browser based UAV telemetry& CGS <br> Select your airframe to begin</p>
+        </div>
+        <div class ="vehicle-gird" id = "vehicle-grid">
+
+        </div>
+        <p style = "margin-top:32px; color:var(--muted); font-size:0.8rem; text-align:center"> FUlly simulated telemetry + offline mode + download and run locally</p>
+    </div>
+
+
+    <!--MAIN APP SCREEN-->
+    <div class = "screen" id = "screen-app">
+        <!--Top bar-->
+        <header class = "top bar">
+            <div class = "logo">AetherLink</div>
+            <div class = "vehicle-badge" id = "vehicle-badge">
+                <span id="vehicle-icon-slot"></span>
+                <span id = "vehicle-name"> QuadCopter</span>
+            </div>
+
+            <div class = "status-pills">
+                <div class = "pill ok" id = "pill-link"><span class = "dot"></span>LINK</div>
+                <div class = "pill ok" id = "pill-gps"><span class = "dot"></span> GPS</div>
+                <div class = "pill" id = "pill-armed"><span class = "dot"></span> DISARMED</div>
+                <div class = "pill ok" id = "pill-mode"><span class = "dot"></span> <span id = "mode-text">STABALIZE</span></div>
+            </div>
+
+            <button class = "btn" id = "btn-change-vehicle" title = "Change Vehicle">Vehicle</button>
+            <button class = "btn" id = "btn-fullscreen" title = "FullScreen">!</button>
+        </header>
+
+
+        
+    </div>
+    </body>
 </html>
