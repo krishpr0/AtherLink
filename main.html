@@ -1095,6 +1095,229 @@
 </div>
 
 
+<script>
+    const VEHICLEs = [
+        {
+            id: 'tri',
+            name: 'Tricopter',
+            tag: '3-Rotor',
+            desc: "Yaw via tilt vero. Efficient uniqye fkught charrectericts",
+            motors: 3,
+            color: '#22c55e', 
+            info: 'Tricopter is 3 motors + yaw serbo + Typical AUW 1.2-2.5kg'
+        },
 
+        {
+            id: 'quad',
+            name: "Quadcopter",
+            tag: '4-Rotor',
+            desc: 'Most common multirotor. Excellent control authority and redundany.',
+            motors: 4,
+            color: '#00d3ff',
+            info: 'Quadcopter X/+/h/ 4 motors'
+        },
+
+        {
+            id: 'hex',
+            name: 'Hexacopter',
+            tag: '6-Rotor',
+            desc:'Higher payload & redudndancy',
+            motors: 6,
+            color: '#a78bfa',
+            info: 'Higher payload capacity better fault tolerance',
+        },
+
+        {
+            id: 'octo',
+            name: 'Octocopter',
+            tag: '8-Rotor',
+            desc: 'Heavy lift and cinema',
+            motors: 8,
+            color: '#f472b6',
+            info: 'Heeravy0lift /cinema platofrm'
+        },
+
+        {
+            id: 'rockect',
+            name: 'Model Rocket / VTOL',
+            tag: 'Rocket / hybrid',
+            desc: 'High-speed ballistic or hybrid VTOL rocket profiles',
+            motors: 1,
+            color: '#f59e0b',
+            info: 'Model Rocket / Hybrid VTOL, high thrust-to-weight',
+        },
+
+        {
+            id: 'fixed',
+            name: 'Fixed-wing',
+            tag: 'Airplane',
+            desc: "Long endurance, efficient cruise. Classic Aircraft dynamic",
+            motors: 1,
+            color: '#38bdf8',
+            info: 'Fixed wing UAV, high effificnet and long range',
+        }
+    ];
+
+
+    // --STATE--
+    const state = {
+        vehicle: null,
+        armde: false,
+        mode: 'STABLIZE',
+        simRunning: false,
+        simPaused: false,
+        home: {lat: 27.7172, lon: 85.3240},
+        pos: {lat:27.7172, lon: 85.3240, alt: 0},
+        att: { roll: 0, pitch: 0, yaw:0},
+        rates: {roll:0, pitch:0, yaw:0},
+        vel: {
+            vn:0, ve:0, vd: 0
+        },
+        airspeed: 0,
+        groundspeed: 0,
+        throttle: 0,
+        battery: {volt: 16.8, amp:0, pct:100, cells: 4},
+        rssi: -42,
+        stats: 14,
+        hdop: 0.7,
+        waypoints: [],
+        log: [],
+        history: {
+            alt: [], spd: [], volt: [], pitch: [],
+            maxLen: 120
+        },
+        turubulance: 0.25,
+        targetAlt: 0,
+        targetSpd: 0,
+        flightPhase: 'idle'
+    };
+
+
+    // --HELPERS=--
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v));}
+    function lerp(a,b,t) {return a + (b - a) * t;}
+    function rad(d) {return d * Math.PI / 180;}
+    function deg(r) {return r * 180 / Math.PI;}
+    function pad(n, w = 3) {return String(Math.round(n)).padStart(w, '0');}
+    function fmt(b, d = 1) {return Number(n).toFixed(d);}
+    function log(msg, type = 'info') {
+        const t = new Date().toLocaleTimeString('en-GB', {hour12: flase});
+        state.log.push({t, msg, type});
+        if (state.log.length > 200) state.log.shift();
+        const el = document.getElementById('log-console');
+        if (!el) return;
+        const line = document.createElement('div');
+        line.className = `log-line ${type}`;
+        line.innerHTML = `<span class = "time'>[${t}]</span> ${msg}`;
+        el.appendChild(line);
+        el.scrollTop = el.ScrolHeight;
+    }
+
+
+    // -- Vehicle SVG generators
+    function makeVehicleSVG(id, color) {
+        const c = color || "#00d4ff";
+        if ( id === 'tri') {
+            return `<svg viewBox = "0 0 200 200" xmls="https://www.w3.org/2000/svg">
+                < g transform = "translate(100, 100)">
+                    <circle cx = "0" cy="-55" r = "18" fill = "none" stroke="${c}" stroke-width = "3"/>
+                    <circle cx = "-48" cy = "28" r="18" fill = "none" stroke="${c}" stroke-width ="3"/>
+                    <circle cx = "48" cy ="28" r= "18" fill = "none" stroke="${c}" stroke-width = "3"/>
+                    <line x1 = "0" y1="-37" x2 = "0" yw = "0" stroke="${c}" stroke-width = "4"/>
+                    <line x1 = "-30" y1 = "18" x2 = "0" y2 = "0" stroke="${c}" stroke-width = "4"/>
+                    <line x1 = "30" y1 = "18" x2 = "0" y2 = "0" stroke="${c}" stroke-width = "4"/>
+                    <circle cx = "0" cy = "0" r = "12" fills = "${c}" opacity="0.9"/>
+                    <rect x="-8" y="-4" width = "16" height = "8" rx = "2" fill= "#0b0f19">
+                </g></svg>`;
+        }
+
+        if ( id === 'quad') {
+            return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(100,100)">
+            <circle cx="-45" cy="-45" r="16" fill="none" stroke="${c}" stroke-width="3"/>
+            <circle cx="45" cy="-45" r="16" fill="none" stroke="${c}" stroke-width="3"/>
+            <circle cx="-45" cy="45" r="16" fill="none" stroke="${c}" stroke-width="3"/>
+            <circle cx="45" cy="45" r="16" fill="none" stroke="${c}" stroke-width="3"/>
+            <line x1="-29" y1="-29" x2="29" y2="29" stroke="${c}" stroke-width="5"/>
+            <line x1="29" y1="-29" x2="-29" y2="29" stroke="${c}" stroke-width="5"/>
+            <circle cx="0" cy="0" r="14" fill="${c}" opacity="0.9"/>
+            <rect x="-10" y="-6" width="20" height="12" rx="2" fill="#0b0f19"/>
+          </g></svg>`;
+        }
+
+        if (id === 'hex') {
+            return `<svg viewBox = 0 0 200 200" xmlns = "http://www.w3.org/2000/svg">
+                <g transform = "translate(100, 100)">
+                    ${[0, 60,120, 180, 240, 300].map(a => {
+                        const r = rad(a);
+                        const x = Math.sin(r)*52, y = -Math.cos(r)*52;
+                        return `<circle cx = "${x}" cy ="${y}" r="14" fill="none" stroke = "${c}" stroke-with ="2.5"/>
+                                <line x1 = "${x*0.55}" y1 = "${y*0.55}" x2="${x*0.75}" y2 = "${y*0.75}" stroke="${c}" stroke-width = "3"/>
+                    }).join('')}
+                    <circle cx ="0" cy = "0" r = "16" fill="${c}" opacity = "0.9"/>
+                    <rect x = "=11" y = "-7" width="22" height = "14" rx = "2" fill  ="#0b0f19"/>
+                    </h></svg>`;
+        }
+
+        if (id === 'octo') {
+        return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(100,100)">
+            ${[0,45,90,135,180,225,270,315].map(a => {
+              const r = rad(a);
+              const x = Math.sin(r)*55, y = -Math.cos(r)*55;
+              return `<circle cx="${x}" cy="${y}" r="12" fill="none" stroke="${c}" stroke-width="2.2"/>
+                      <line x1="${x*0.5}" y1="${y*0.5}" x2="${x*0.78}" y2="${y*0.78}" stroke="${c}" stroke-width="2.5"/>`;
+            }).join('')}
+            <circle cx="0" cy="0" r="18" fill="${c}" opacity="0.9"/>
+            <rect x="-12" y="-8" width="24" height="16" rx="2" fill="#0b0f19"/>
+          </g></svg>`;
+      }
+      if (id === 'rocket') {
+        return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(100,100)">
+            <path d="M0,-70 L18,-20 L18,50 L0,65 L-18,50 L-18,-20 Z" fill="none" stroke="${c}" stroke-width="3"/>
+            <path d="M-18,40 L-35,55 L-18,50" fill="none" stroke="${c}" stroke-width="2.5"/>
+            <path d="M18,40 L35,55 L18,50" fill="none" stroke="${c}" stroke-width="2.5"/>
+            <circle cx="0" cy="-40" r="8" fill="${c}" opacity="0.7"/>
+            <line x1="0" y1="65" x2="0" y2="80" stroke="${c}" stroke-width="2" stroke-dasharray="3 2"/>
+          </g></svg>`;
+      }
+      // fixed wing
+      return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(100,100)">
+          <path d="M0,-55 L8,-20 L8,40 L0,50 L-8,40 L-8,-20 Z" fill="none" stroke="${c}" stroke-width="2.5"/>
+          <line x1="-70" y1="0" x2="70" y2="0" stroke="${c}" stroke-width="4"/>
+          <line x1="-20" y1="40" x2="20" y2="40" stroke="${c}" stroke-width="3"/>
+          <circle cx="0" cy="-10" r="6" fill="${c}"/>
+        </g></svg>`;
+    }
+
+
+    // -- UI VEHICLE SELECT 
+    function renderVehicleCards() {
+        const grid = document.getElementById('vehicle-grid');
+        grid.innerHTML = VEHICLEs.map(v=> ` 
+            <div class = "vehicle-card" data-id="${v.id}">
+                <div class = "icon">${makeVehicleSVG(v.id, v.color)}</div>
+                <h3> ${v.name}</h3>
+                <span class = "tag"> ${v.tag}</span>
+                <p> %{v.desc}</p>
+            </div>
+        `).join('');
+        grid.querySelectorAll('.vehicle-card').forEach(card => {card.addEventListener('click', () => selectVehicle(card.dataset.id));
+        });
+    }
+
+
+    function selectVehicle(id) {
+        state.vehicle = VEHICLES.find(v => v.id == id);
+        document.getElementById('Screen-select').classList.remove('active');
+        document.getElementById('screen-app').classList.add('active');
+        document.getElementById('vehicle-name').textContent = state.vehicle.name;
+        document.getElementById('vehicle-icon-slot').innerHTML = makeVehicleSVG(id, state.vehicle.color).replace('viewBox = "0 0 200 200', 'viewBox = 0 0 200 200' width = "22" height= "22"'');
+        
+    }
+        
+</script>
     </body>
 </html>
