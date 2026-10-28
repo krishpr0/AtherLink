@@ -10,3 +10,6 @@ When You run the main file a will see an menu that menu contains the several veh
 ## Files
 
 | File | What it does |
+| ---- | ------------ |
+| ** Telemetry.js** | It is the shared pipe. |
+
