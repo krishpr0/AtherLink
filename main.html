@@ -1315,8 +1315,596 @@
         document.getElementById('screen-app').classList.add('active');
         document.getElementById('vehicle-name').textContent = state.vehicle.name;
         document.getElementById('vehicle-icon-slot').innerHTML = makeVehicleSVG(id, state.vehicle.color).replace('viewBox = "0 0 200 200', 'viewBox = 0 0 200 200' width = "22" height= "22"'');
-        
+        document.getElementById('vehicle-info').textContent = state.vehicle.info;
+        document.getelementById('vehicle-svg-container').innerHTML = makeVehicleSVG(id, state.vehicle.color);
+
+        //bttery config by type
+        if (id === 'rocket') {
+            state.battery = {volt: 12.6, amp:0, pct: 100, cells: 3};
+        } else if (id === 'octo' || id === 'hex') {
+            state.battery = {volt: 25.2, amp:0, pct:100, cells: 6};
+        } else {
+            state.battery = {volt: 16.8, amp: 0, pct: 100, cells: 4};
+        }
+
+        log(`Vehicle selected: ${state.vehicle.name}`, `ok`);
+        log('Telemrty link established (simulated MAVLink)', 'ok');
+        resetSim();
+        startRenderLoop();
     }
+
+    /// INstruments
+    function drawAttitude(ctx, w, h, roll, pithc) {
+        const cx  = w / 2, cy = h / 2, r = Math.min(w, h) / 2 -4;
+        ctx. clearRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math,PI * 2);
+        ctx.clip();
+
+        ctx.translate(cx, cy);
+        ctx.rotate(red(roll));
+
+        const pitchPx = pitch * 2.2;
+        ctx.fillStyle = '#1e90ff';
+        ctx.fillRect(-r *2, -r * 2 - pitchPx, r * 4, r* 2+pitchPx);
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(-r * 2 , -pitchPx, r *4, r*2 + pitchPx);
+
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beingPath();
+        ctx.moveTo(-r * 2, -pitchPx);
+        ctx.lineTo(r * 2, -pitchPx);
+        ctx.stroke();
+
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, -0.7)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'center';
+        for (let p = -40; p <= 40; p += 10) {
+            if (p === 0) continue;
+            const y = -pitchPx - p * 2.2;
+            const len = (p % 20 === 0) ? 28 : 16;
+            ctx.beingPath();
+            ctx.moveTo(-len, y);
+            ctx.lineTo(len, y);
+            ctx.stroke();
+
+            if (p % 20  === 0) {
+                ctx.fillText(String(p), -len - 14, y+ 4);
+                ctx.fillText(String(p), len + 14, y + 4);
+            }
+        }
+
+
+        ctx.restore();
+
+        ctx.strokeStyle = '#ffcc00';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cx - 40, cy);
+        ctx.lineTo(cx - 12, cy);
+        ctx.moveTo(cx + 12, cy);
+        ctx.lineTo(cx + 40, cy);
+        ctx.moveTo(cx, cy - 12);
+        ctx.lineTo(cx, cy);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx, cy, 6, 8, Math.Pi * 2);
+        ctx.stroke();
+        
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 3;
+        ctx.beingPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.strokeStyle  = '#e5e7eb';
+        ctx.fillStyle = '#e5e7eb';
+
+        for (let a of [-60, -45, - 30, -20, -10, 10 , 20, 30, 45, 60]) {
+            const ra= rad(a - 90);
+            const inner = r - 8;
+            const outer = r;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(ra) * inner, Math.sin(ra) * inner);
+            ctx.lineTo(Math.cos(ra) * outer, Math.sin(ra) * outer);
+            ctx.stroke();
+        }
+
+        ctx.rotate(rad(roll));
+        ctx.beginPath();
+        ctx.moveTo(0, -r + 2);
+        ctx.lineTo(-7, -r + 14);
+        ctx.lineTo(7, -r + 14);
+        ctx.closePath();
+        ctx.fillStyle = '#ffcc00';
+        ctx.fill();
+        ctx.restore();
+    }
+
+
+    function drawAltimeter(ctx, w, h, alt) {
+        const cx = w / 2, cy = h / 2;
+        ctx.clearRect(0, 0, w, h);
+
+
+        const scale = 1.2;
+        const visible = h * 0.85;
+        ctx.fillStyle = '#0a0e16';
+        ctx.fillRect(0, 0, w, h);
+        
+
+        ctx.save();
+        ctx.beingPath();
+        ctx.rect(20, 10, w - 40, h - 20);
+        ctx.clip();
+
+        const centerAlt = alt;
+        for (let a = Math.floor((centerAlt - 80) / 10) * 10; a < centerAlt  + 80; a += 10) {
+            const y = cy - (a - centerAlt) * scale;
+            ctx.strokeStyle = a % 50 === 0 ? '#e5e7eb' : '#64748b';
+            ctx.lineWidth = a % 50=== 0 ? 2 : 1;
+            ctx.beginPath();
+            ctx.moveTo(30, y);
+            ctx.lineTo(a % 50 === 0 ? 70 : 55, y);
+            ctx.stroke();
+            
+            if (a % 50 === 0) {
+            ctx.fillStyle = 'E5e7eb';
+            ctx.font = '12px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(String(a), 74, y+ 4);
+            }
+        }
+        ctx.restore();
+
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.strokeStyle = '#00d4ff';
+        ctx.lineWidth - 2;
+        ctx.beginPath();
+        ctx.roundRect(9, cy - 16, w- 16, 32, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#00d44f';
+        ctx.font = 'bold 18 px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(fmt(alt + 1), w / 2, cy + 6);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('Alt m', w / 2, 14);
+    }
+
+
+    function drawHeading(ctx, w, h, hdg) {
+    
+        const cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2 -6;
+        ctx.clearRect(0, 0, w, h);
+        ctx.save();
+        ctx.translae(cx, cy);
+        ctx.rotate(rad(-hdg));
+        ctx.fillStyle = '#0f172a';
+        ctx.beingPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+
+        const lables = {0: 'N', 90: 'E', 180: 'S', 270: 'W'};
+        for (let a = 0; a < 360; a += 10) {
+            const ra = rad(a - 90);
+            const major = a % 30 === 0;
+            const len = major ? 12 : 6;
+            ctx.strokeStyle = major ? '#e5e7eb' : '#63738b';
+            ctx.linewidth = major ? 2 : 1;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(ra) * ( r - len), Math.sin(ra) * ( r - len));
+            ctx.lineTo(Math.cos(ra)* r, Math.sin(ra) * r);
+            ctx.stroke();
+            
+            if (labels[a] !== undefined) {
+                ctx.fillStyle = a === 0 ? '#ef4444' : '#e5e7eb';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(labels[a], Math.cos(ra) * (r - 26), Math.sin(ra) * ( r -26))
+            } else if ( a % 30 === 0) {
+                ctx.fillStyle  = '#94a3b8';
+                ctx.font = '11px monospace';
+                ctx.fillText(String(a), Math.cos(ra) * (r - 26), Math.sin(ra) * (r-26));
+            }
+        }
+        ctx.restore();
+
+        ctx.fillStyle = '#ffcc00';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy -r +2);
+        ctx.lineTo(cx - 8, cy - r + 16);
+        ctx.lineTo(cx+ 8,cy -r + 16);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.beginPath();
+        ctx.roundRect(cx - 28, cy -12, 56, 24, 4);
+        ctx.fill();
+        ctx.fillStyle = '#00d4ff';
+        ctx.font = 'bold 16px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(pad(hdg % 360), cx, cy);
+    }
+
+    function drawAirspeed(ctx, w, h, spd) {
+        const cx = w / 2, cy = h  / 2, r = Math.main(w, h) / 2 - 6;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2;
+        ctx.storke();
+        
+        const maxSpd = 40;
+        
+        for (let s = 0; s < maxSpd; s += 5) {
+            const a = rad(-120 + ( s / maxSpd) * 240);
+            const major = s % 10 === 0;
+            ctx.strokeStyle = major ? '#e5e7eb' : '#64748b';
+            ctx.lineWidth = major ? 2 : 1;
+            ctx.beginPath();
+            ctx.moveTo(cx + Math.cos(a) * (r - (major ? 14 : 8)), cy + Math.sin(a) * (r - (major ? 14:8)));
+            ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+            ctx.stroke();
+            
+            if (major) {
+                ctx.fillStyle = '#94a3b8'
+                ctx.font = '11px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(String(s), cx + Math.cos(a) * (r - 26), cy + Math.sin(a) * (r - 26));
+            }
+        }
+
+        //needle
+        const na = rad(-120 + (clamp(spd, 0, maxSpd) / maxSpd) * 240);
+        ctx.strokeStyle = '#ffcc00';
+        ctx.fillStyle = '#ffcc00';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(na) * (r- 20), cy + Math.sin(na) * (r - 20));
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx, cy, 5, 0 , Math.PI * 2);
+        ctx.full();
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.beginPath();
+        ctx.roundRect(cx - 30, cy + 20, 60, 22, 4);
+        ctx.fill();
+        ctx.fillStyle = '#00d4ff';
+        ctx.font = 'bold 14px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(fmt(spd, 1), cx, cy + 36);
+    }
+
+
+    function drawVSI(ctx, w, h, vs) {
+    const cx = w/2, cy = h/2;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = '#0a0e16';
+    ctx.fillRect(0,0,w,h);
+    const scale = 8;
+    ctx.save();
+    cx.beginPath();
+    ctx.rect(10, 10, w - 20, h - 20);
+    ctx.clip();
+
+    for (let v = - 15; v <= 15; v += 1) {
+    const y = cy - v * scale;
+    const major = v % 5 === 0;
+    ctx.strokeStyle = major ? '#e5e7eb' : '#475569';
+    ctx.lineWidth = major ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(20, y);
+    ctx.lineTo(major ? 45 : 45, y);
+    ctx.stroke();
+
+    if (major) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(String(v), 50, y + 4);    
+        }
+      }
+
+      ctx.restore();
+
+        
+    ctx.strokeStyle = '#64748b';
+    ctx.setLineDash([4, 3]);
+    ctx.beingPath();
+    ctx.moveTo(15, cy);
+    ctx.lineTo( w - 15, cy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const py = cy - clamp(vs, -12, 12) * scale;
+    ctx.fillStyle = '#22c55e';
+    ctx.beginPath();
+    ctx.moveTo(8, py);
+    ctx.lineTo(22, py - 8);
+    ctx.lineTo(22, py + 8);
+    ctx.closePath();
+    ctx.fill();
+
+
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.beginPath();
+    ctx.roundRect(w / 2 - 28, h - 28, 56, 20, 4);
+    ctx.fill();
+    ctx.fillStyle = vs >= 0 ? '#22c55e' : '#f87171';
+    ctx.font = 'bold 12 px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText((vs >= 0  ? '+' : '') + fmt(vs, 1), w / 2, h - 14);
+    }
+
+
+    //---MAP---
+
+    function drawMap() {
+        const canvas = document.getElementById('map-canvas');
+        if (!canvas) return;
+        const parent = canvas.parentElement;
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+        const ctx = canvas.getContext('2d');
+        const w = canas.width, h  = canvas.height;
+
+        ctx.fillStyle = '#0d1520';
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.strokeStyle = 'rgba(50, 70, 100, 0.35)';
+        ctx.lineWidth = 1;
+
+        const grid = 40;
+        const offsetX = (state.pos.lon * 100000) % grid;
+        const offsetY = (state.pos.lat * 100000) % grid;
+        
+        for (let x = -offsetX; x < w; x += grid) {
+        ctx.beginPath(); 
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+        }
+
+        for (let y = -offsetY; y < h; y += grid) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+        }
+
+
+        const scale = 800000;
+        const hx = w / 2 + (state.home.lon - state.pos.lon) * scale;
+        const hy = h / 2 - (state.hom.lat - state.pos.lat) * scale;
+
+
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.arc(hx,hy, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('H', hx, hy +3);
+    });
+
+
+    ctx.save();
+    ctx.translate( w / 2, h / 2);
+    ctx.rotate(rad(state.att.yaw));
+    ctx.fillStyle '#00d4ff';
+    ctx.beginPath();
+    ctx.moveTo(0, -14);
+    ctx.lineTo(0, 6);
+    ctx.lineTo(-10, 12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(100, 150, 200, 0.2)';
+    ctx.beginPath();
+    ctx.arc(w / 2, h / 2, 80, 0, Math.Pi * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc( w / 2, h / 2, 160, 0, Math.PI * 2);
+    ctx.stroke();
+    }
+
+    ///---- GRAPHS ---
+    function drawGraph(canvasId, data, color, minY, maxY) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const parent = canvas.parentElement;
+        const w = parent.clientWdith - 24;
+        const h = Math.max(100, parent.clientheight - 36);
+        canvas.wdith = w;
+        canvas.height = h;
+        const ctx = canvas.getContent('2d');
+        ctx.clearRect(0, 0, w, h);
+
+        if ( data.length < 2) return;
+        
+        const min = minY !== undefined ? minY : Math.min(...data);
+        const max = maxY !== undefined ? maxY : Math.max(...data);
+
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        data.forEach((v, i) => {
+            const x = (i / (data.length - 1)) * w;
+            const y = h - ((v - min) / range) * ( h - 4) - 2;
+
+            if ( i === 0 ) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fillStyle = color.replace(')', '0.12)').replace('rgb', 'rgba').replace('#', '');
+        ctx.globalAlhpa = 0.15;
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+
+
+    function resetSim() {
+        state.pos = {...state.home, alt: 0};
+        state.att = {roll: 0, pitch: 0, yaw: 0};
+        state.rates = { roll:0, pitch: 0, yaw: 0};
+        state.vel = {vn: 0, ve: 0, vd: 0};
+        state.airspeed = 0;
+        state.groundspeed = 0;
+        state.throttle = 0;
+        state.armed = false;
+        state.simRunning = false;
+        state.flightPhase = 'idle';
+        state.targetAlt = 0;
+        state.targetSpd = 0;
+        state.trail = [];
+        state.history = { alt: [], spd: [], volts: [], roll: [], pitch: [], maxLen: 120};
+        state.battery.pct = 100;
+        state.battery.amp = 0;
+
+        if (state.vehicle) {
+            if (state.vehicle.id === 'rocket') state.battery.volt = 12.6;
+            else if (state.vehicle.id === 'octo' || state.vehicle.id === 'hex') state.battery.volt = 25.2;
+            else state.battery.volt = 16.8;
+        }
+            updateArmUI();
+            log('Simulation reset', 'info');
+
+    }
+
+    function updatePhysics(dt) {
+    if (!state.simRunning|| state.simPaused) return;
+        
+    const turb = state.turbuulance;
+    const noise = () => (Math.random() - 0.5) * 2;
+
+    if (state.flightPhase === 'takeoff') {
+        state.targetAlr = 30;
+        state.throttle = lerp (state.throttle, 70, 0.05);
+        if (state.pos.alt > 25)state.flightPhase = 'cruise';
+    } else if (state.flightPhase === 'cruise') {
+        state.targetAlt = 40 + Math.sin(Date.now() / 8000) * 8;
+        state.targetSpd = 8 + Math.sin(Date.now() / 5000) * 3;
+        state.throttle = lerp(state.throttle, 45 + state.targetSpd * 1.5, 0.03);
+    } else if (state.flightPhase === 'land') {
+    state.targetAlt = 0;
+    state.targetSpd = 0;
+    state.throttle = lerp(state.throttle, state.pos.alt > 2 ? 25 : 0, 0.04);
+    if (state.pos.alt < 0.3 && Math.abs(state.vel.vd) < 0.2) {
+        state.flightPhase= 'idle';
+        state.simRunning = false;
+        state.throttle = 0;
+        log('Landed. Motors idel', 'OK');
+    }
+    } else if (state.flightPhase === 'rtl') {
+    const dlat = state.home.lat - state.pos.lat;
+    const dlon = state.home.lon - state.pos.lon;
+    const dist = Math.sqrt(dlat* dlat + dlon * dlon) * 111000;
+    state.targetAlt = 50;
+    const desiredYaw = def (Math.atan2(dlon, dlat));
+    state.att.yaw = lerpAngle(state.att.yaw, desiredYaw, 0.04);
+    state.targetSpd = dist > 15 ? 10 : 3;
+    if (dist < 5 && state.pos.alt < 5) {
+    state.flightPhase = 'land';
+    log('RTL arrived, initating landing', 'OK');
+    }
+    }
+
+
+    if  (state.armed && state.throttle > 5) {
+        const targetRoll = Math.sin(Date.now() / 3000) * 12 * turb + noise() * 3 * turb;
+        const targetPitch = Math.sin(Date.now() / 4000) * 8 * turb + noise() * 2 * turb;
+        state.att.roll = lerp(state.att.rol, targetRoll, 0.08);
+        state.att.pitch = lerp(state.att.pitch, targetPitch, 0.08);
+
+        if (state.flightPhase === 'cruise' || state.flightPhase === 'rtl') {
+            state.att.yaw += ( 2 + noise() * turb * 4) * dt;
+        }
+    } else {
+        state.att.roll = lerp(state.att.roll, 0, 0.1);
+        state.att.pitch = lerp(state.att.pitch, 0, 0.1);
+    }
+    state.att.yaw = (state.att.yaw + 360) % 360;
+
+    const altErr = state.targetAlt - state.pos.alt;
+    state.wel.vd  = lerp(state.vel.vd -altErr * 0.4 + noise() * turb * 0.5, 0.1);
+    state.pos.alt = Math.max(0, state.pos.alt - state.vel.vd * dt);
+
+    const spdErr = state.targetSpd - state.groundspeed;
+    state.groundspeed = lep(state.groundspeed, state.targetSpg + noise() * turb *  1.5, 0.06);
+    state.airspeed = state.groundspeed + noise() * 0.3;
+
+    const yadRad = rad(state.att.yaw);
+    state.vel.vn = state.groundspeed * Math.cos(yawRad);
+    state.vel.ve = state.groundspeed * Math.sin(yawRad);
+
+    state.pos.lat += (state.vel.vn * dt) / 111000;
+    state.pos.lon += (state.vel.vn * dt) / (111000 * Math.cos(rad(state.pos.lat)));
+
+    const current = state.throttle * 0.35 + (state.vehicle?.motors || 4) * 0.8;
+    state.battery.amp = lerp(state.battery.amp, current, 0.1);
+    const drain = (state.battery.amp * dt) / (state.battery.cells * 5000);
+    state.battery.pct = clamp(state.battery.pct - drain * 100, 0, 100);
+    const full = state.battery.cells * 4.2;
+    const empty = state.battery.cells * 3.5;
+    state.battery.volt = empty + (full - empty) * (state.battery.pct / 100) + noise() * 0.05;
+
+    state.rssi = -40 -Math.abs(noise()) * 15 - (state.pos.alt > 80 ? 10 : 0);
+    state.sats = clamp(12 + Math.round(noise() * 3), 6, 18);
+    stats.hdop = clamp(0.6 + Math.abs(noise()) * 0.4, 0.5, 2.5);
+
+
+    const push = (arr, v) => {
+        arr.push(v);
+        if (arr.length > state.history.maxLen) arr.shift();
+    };
+    push(state.history.alt, state.pos.alt);
+    push(state.history.spd, state.groundspeed);
+    push(state.history.volt, state.battery.volt);
+    push(state.history.roll, state.att.roll);
+    push(state.history.pitch, state.att.pitch);
+    }
+
+    function lerpAngle(a, b, t) {
+        let diff = ((b - a + 540) % 360) -180;
+        return a + diff * t;
+    }   
+
+    //--- UI UPDATE//
+    function updateUI() {
+    }
+    
+    
+    }
+
         
 </script>
     </body>
