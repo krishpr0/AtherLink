@@ -1967,6 +1967,88 @@
             gpsPill.className = 'pill err';
         }
 
+
+        function updateArmUI() {
+            const pill = document.getElementById('pill-armed');
+            if (state.armed) {
+                pill.className = 'pill armed';
+                pill.innerHTML = '<span class = "dot"></span> ARMED'
+            } else {
+                pill.className = 'pill';
+                pill.innerHTML = '<span class = "dot"></span> DISARMED';
+            }
+        }
+
+
+    
+        // ----- Render loop -----------
+        let lastTime = performance.now();
+        function startRenderLoop() {
+            function frame(now) {
+                const dt = Math.min((now - lastTime) / 1000, 0.05);
+                lastTime = now;
+
+                updatePhysics(dt);
+                updateUI();
+
+                //instruments
+                const ai = document.getElementById('ai-canvas');
+                if (ai) drawAttittude(ai.getContent('2d'), ai.width, ai.height, state.att.roll, state.att.pitch);
+
+                const alt = document.getElementById('alt-canvas');
+                if (alt) drawAltimeter(alt.getContext('2d'), alt.width, alt.height, state.pos.alt);
+
+                const hdg = document.getElementById('hdg-canvas');
+                if (hdg) drawHeading(hdg.getContext('2d'), hdg.width, hdg.height, state.att.yaw);
+                
+                const asi = document.getElementById('asi-canvas');
+                if (asi) drawAirspeed(asi.getContext('2d'), asi.width, asi.height, state.airpseed);
+
+                const vsi = document.getElementById('vsi-canvas');
+                if (vsi) drawVSI(vsi.getContext('2d'), vsi.width, vsi.height, -state.vel.vd);
+
+                if (document.getElementById('view-map').classList.contains('active')) {
+                    drawMpa();
+                }
+
+
+                if (document.getElementById('view-graphs').classList.contains('active')) {
+                    drawGraph('graph-alt', state.history.alt, '#00d4ff');
+                    drawGraph('graph-spd', state.history.spd, '#22c55e');
+                    drawGraph('graph-volt', state.history.volt, '#f59e0b', 10, 26);
+
+                    //dual att
+                    const g = document.getElementById('graph-att');
+                    if (g) {
+                        const parent = g.parentElement;
+                        g.width = parent.clientWidth - 24;
+                        g.height = Math.max(100, parent.clientHeight - 36);
+                        const ctx = g.getContext('2d');
+                        ctx.clearRect(0, 0, g.width, g.height);
+                        const drawLine = (data, color) => {
+                            if(data.length < 2) return;
+                            ctx.strokeStyle = color;
+                            ctx.lineWidth = 1.5;
+                            ctx.beginPath();
+                            data.forEach((v, i) => {
+                                const x = (i / (data.length - 1)) * g.width;
+                                const y = g.height / 2 - v * 2;
+                                if (i === 0) ctx.moveTo(x, y);
+                                else ctx.lineTo(x, y);
+                            });
+                            ctx.stroke();
+                        };
+                        drawLine(state.history.roll, '#f472b6');
+                        drawLine(state.history.pitch, '#a78bfa');
+                        }
+                }
+                        reuqestAnimationFrame(frame);
+            }
+                        requestAnimationFrame(frame);
+        }
+
+        
+
     }
 
         
