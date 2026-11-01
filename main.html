@@ -1901,8 +1901,72 @@
     //--- UI UPDATE//
     function updateUI() {
     }
-    
-    
+        document.getElementById('t-alt').textContent = fmt(state.pos.alt);
+        document.getElementById('t-vs').textContent = fmt(-state.vel.vd);
+        document.getElementById('t-gs').textContent = fmt(state.groundspeed);
+        document.getElementById('t-as').textContent = fmt(state.airspeed);
+        document.getElementById('t-hdg').textContent = fmt(state.att.yaw);
+        document.getElementById('t-yawrate').textContent = fmt(state.rates.yaw || 0);
+        document.getElementById('t-roll').textContent = fmt(state.att.roll);
+        document.getElementById('t-pitch').textContent = fmt(state.att.pitch);
+        document.getElementById('t-volt').textContent = fmt(state.battery.volt, 2);
+        document.getElementById('t-amp').textContent = fmt(state.battery.amp,1);
+        document.getElementById('t-batt-pct').textContent = Math.round(state.battery.pct);
+        document.getElementById('t-rssi').textContent = Math.round(state.rssi);
+        document.getElementById('t-sats').textContent = state.sats;
+        document.getElementById('t-hdop').textContent = fmt(state.hdop, 1);
+
+        const distHome = Math.sqrt (
+            Math.pow((state.pos.lat - state.home.lat) * 111000,2 ) + Math.pow((state.pos.lon - state.home.lon) * 111000, 2)
+        );
+
+        document.getElementById('t-home').textContent = Math.round(distance);
+
+        const fill = document.getElementById('batt-fill');
+        fill.style.width = state.battery.pct + '%';
+        fill.style.background = state.battery.pt > 40 ? '#22c55e' : state.battery.pct > 20 ? '#f59e0b' : '#ef44444';
+
+        //HUD
+        document.getElementById('hud-alt').textContent = fmt(state.pos.alt);
+        document.getElementById('hud-spd').textContent = fmt(state.groundspeed);
+        document.getElementById('hud-hdg').textContent = pad(state.att.yaw);
+        document.getElementById('hud-vs').textContent = fmt(-state.vel.vd);
+        document.getElementById('hud-batt').textContent = Math.round(state.battery.pct) + '%';
+        document.getElementById('hud-mode').textContent = state.mode.substring(0, 4);
+        document.getElementById('hud-thr').textContent = Math.round(state.throttle) + '%';
+        
+
+        //MAP COORDS
+        document.getElementById('map-lat').textContent = state.pos.lat.toFixed(6);
+        document.getElementById('map-lon').textContent = state.pos.lon.toFixed(6);
+        document.getElementById('map-track').textContent = pad(state.att.yaw);
+
+        //vehicle diagram attitude
+        document.getElementById('vd-roll').textContent = fmt(state.att.roll) + 'deg';
+        document.getElementById('vd-pitch').textContent = fmt(state.att.pitch) + 'deg';
+        document.getElementById('vd-yaw').textContent = pad(state.att.yaw) + 'deg';
+        document.getElementById('vd-thr').textContent = Math.round(state.throttle) + 'deg';
+
+
+        const svgCont = document.getElementById('vehicle-svg-container');
+
+        if(svgCont && svgCont.firstChild) {
+            svgCont.style.transform = 'rotateX(${-state.att.pitch * 0.7}deg) rotateZ(${state.att.roll}deg)';
+            svgCont.style.transformStyle = 'preserve-3d';
+        }
+
+        document.getElementById('mode-text').textContent = state.mode;
+
+        const gpsPill = document.getElementById('pill-gps');
+        if (state.sats >= 10) {
+            gpsPill.className = 'pill ok';
+        } else if (state.sats >= 6) {
+            gpsPill.className = 'pill warn';
+        }
+        else {
+            gpsPill.className = 'pill err';
+        }
+
     }
 
         
