@@ -2047,11 +2047,208 @@
                         requestAnimationFrame(frame);
         }
 
-        
+        // ------ EVENT bindings -------
+        function bindEvents() {
+            //tabs
+            document.querySelectorAll('.view-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('view-' + tab.dataset.view).classList.add('active');
+            });
+        });
 
-    }
 
-        
+        // arm / disarm
+        document.getElementById('btn-arm').addEventListener('click', () => {
+            if (!state.vehicle) return;
+            state.armed = true;
+            updateArmUI();
+            log('Armed = motors enabled', 'warn');
+        });
+
+        document.getElementById('btn-disarm').addEventListener('click', () => {
+            state.armed = false;
+            state.throttle = 0;
+            state.simRunning = false;
+            state.flightPhase = 'idle';
+            updateArmUI();
+            log('DISARMED', 'ok');
+        });
+
+        //flight commands
+        document.getElementById('btn-takeoff').addEventListener('click', () => {
+            if (!state.armed) {log('cannot takeoff - not armed', 'err'); return;}
+            state.simRunning = true;
+            state.simPaused = false;
+            state.flightPhase = 'takeoff';
+            state.mode = 'GUIDED';
+            document.getElementById('mode-select').value = 'GUIDED';
+            log('Takeoff commanded -> climbing to 30m', 'ok');
+        });
+
+        document.getElementByid('btn-land').addEventListener('click', () => {
+            state.flightPhase = 'land';
+            state.mode = 'LAND';
+            document.getElementById('mode-selet').value = 'LAND';
+            log('Landing commanded','warn');
+        });
+
+        document.getElementById('btn-rtl').addEventListener('click', () => {
+            if(!state.armed) {log('RTL requires armed vehicle','err'); return;}
+            state.simRunning = true;
+            stte.flightPhase = 'rtl';
+            state.mode = 'RTL';
+            document.getElementById('mode-select').value = 'RTL';
+            log('RTL - returning to home', 'ok');
+        });
+
+        document.getElementById('btn-hold').addEventListener('click', () => {
+            state.mode = 'LOITER';
+            document.getElementById('mode-select').value = 'LOITER';
+            state.targetSpd = 0;
+            log('Loiter / Hold position', 'info');
+        });
+
+        document.getElementById('mode-select').addEventListener('change', (e) => {
+            state.mode = e.target.value;
+            log(`Mode Changed -> ${state.mode}`, 'info');
+        });
+
+        //sim
+        document.getElementById('btn-sim-fly').addEventListener('click', () => {
+            if(!state.armed) {
+                state.armed = true;
+                updateArmUI();
+            }
+                state.simRunning = true;
+                state.simPaused = false;
+                if (state.flightPhase === 'idle') state.flightPhase = 'takeoff';
+                log('Flight simulation stated', 'ok');
+        });
+
+        document.getElementById('btn-sim-pause').addEventListener('click', () => {
+            state.simPaused = !state.simPaused;
+            log(state.simPaused ? 'Simulation paused': 'simuation resumed', 'info');
+        });
+
+        document.getElementById('btn-sim-reset').addEventListener('click', resetSim);
+
+        document.getElementById('sim-turb').addEventListener('input', (e) => {
+            state.turbuulance = e.target.value / 100;
+        });
+
+        //vehicle change
+        document.getElementByid('btn-change-vehicle').addEventListener('click', () => {
+            document.getElementById('screen-app').classList.remove('active');
+            document.getElementById('screen-select').classList.add('active');
+            log('returned to vehicle selection', 'info');
+        });
+
+        //fullscreen
+        document.getElementById('btn-fullscreen').addEventListener('click', () =>{
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        });
+
+        //log actions
+        document.getElementById('btn-clear-log').addEventListener('click', () => {
+            state.log = [];
+            document.getElementById('log-console').innerHTML = '';
+            log('Log cleared', 'info');
+        });
+
+        document.getElementById('btn-export-log').addEventListener('click', () => {
+            const text = state.log.map(l => `[${l.t}] ${l.msg}`).join('\n');
+            const blob = new Blob([text], {type: 'text/plain'});
+            const a = document.createElement('a');
+            a.herf = URL.createObjectURL(blob);
+            a.download = `aetherlink-log-${Date.now()}.txt`;
+            a.click();
+            log('Log exported', 'ok');
+        });
+
+        document.getElementById('btn-center-map').addEventListener('click', () => {
+            log('Map centered on vehicle', 'info');
+        });
+
+        document.getElementById('btn-screenshot').addEventListener('click', () => {
+            log('Screenshot: use browser capture or OS tools (canvas export coming soon)', 'info');
+        });
+
+        //Waypoints
+        document.getelementById('btn-add-wp').addEventListener('click', () => {
+            const wp = {
+                lat: state.pos.lat + (Math.random() - 0.5) * 0.002,
+                lon: state.pos.lon + (Math.random() - 0.5) * 0.002,
+                alt: 30 + Math.round(Math.random() * 40),
+                cmd: 'WAYPOINT'
+            };
+            state.waypoints.push(wp);
+            renderWaypoints();
+            log(`Waypoint #${state.waypoints.length} addded`, 'ok');
+        });
+
+        document.getElementById('btn-clear-wp').addEventListener('click', () => {
+            state.waypoints= [];
+            renderWaypoints();
+            log('All waypoints cleared', 'info');
+        });
+
+        document.getElementById('btn-upload-mission').addEventListener('click', () => {
+            if (state.waypoints.length === 0) {
+                log('No waypoints to upload', 'warn');
+                return;
+            }
+                log('Mission uploaded (${state.waypoints.length} waypoints) - simulated', 'ok');
+
+        });
+    }   
+
+
+    function renderWaypoints() {
+        const tbody = document.getElementById('wp-tbody');
+        const empty = document.getElemenyById('wp-empty');
+        if (state.waypoints.length === 0) {
+            tbody.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+
+        empty.style.display = 'none';
+        tbody.innerHTML = state.waypoints.map((wp, i) => `
+            <tr style = "border-bottom:1px solid var(--border);">
+                <td style = "padding: 8px 6px"> ${i + 1}</td>
+                <td> ${wp.cmd}</td>
+                <td style = "font-family:var(--mono; font-size: 0.8rem;">${wp.lat.toFixed(6)}</td>
+                <td style = "font-family:car(--mono);font-size:0.8rem;">${wp.lon.toFixed(6)}</td>
+                <td>${wp.alt}</td>
+                <td><button class = "btn" style = "padding:2px 8px; font-size:0.7rem;" onclick = "removeWP(${i})">x</button></td>
+            </tr>
+        `).join('');
+   }
+
+   window.removeWp = function(i) {
+        state.waypoints.splice(i, 1);
+        renderWaypoints();
+        log(`Waypoint removed`, 'info');
+   };
+
+   //--BOTTOM
+   window.addEventListener('load', () => {
+            renderVehicleCards();
+            bindEvents();
+            setTimeout(() => {
+                document.getElementById('splash').classList.add('hide');
+            }, 600);
+            log('AetherLink GCS ready', 'ok');
+            log('Select an airframe to continue', 'info');
+   });
+
+   window.addEventListener('resize', () => {
+            if (document.getElementById('view-map').classList.contains('active')) drawMap();
+   });  
 </script>
     </body>
 </html>
