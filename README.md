@@ -11,5 +11,25 @@ When You run the main file a will see an menu that menu contains the several veh
 
 | File | What it does |
 | ---- | ------------ |
-| ** Telemetry.js** | It is the shared pipe. |
+| **Telemetry.js** | It is the shared pipe. |
+| **Fakesource.js**| It a simple fake drone for testing. |
+| **recorder.js** | Records a flight so you can replay it later. |
+| **export.js** | Saves the recorded file as **JSON** or **CVS**. |
+| **alerts.js** | Watches the stream and warns on low battery, weak signal, bad GPS, etc. |
+| **inspector.js** | Live console that shows every message coming throught . |
+| **TEST.html** | small test bench so you can try everything without the full dashboard. |
+
+
+
+----
+
+## How to run
+1. Open **`test.html`** in a browser.
+2. Click **Start Fake Flight**.
+3. Click **Record**, let it fly for a bit, then **Stop Rec**.
+4. Press **Replay**.
+5.  To hear alerts quickly, turn **Battery Drain** upto ~30x.
+6.  **Important:** click once anywhere on the page first, otherwise the browser will block sound and speech.
+
+
 
